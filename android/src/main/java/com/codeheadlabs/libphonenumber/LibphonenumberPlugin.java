@@ -7,7 +7,6 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 import com.google.i18n.phonenumbers.AsYouTypeFormatter;
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -21,23 +20,21 @@ import java.util.Map;
 
 /** LibphonenumberPlugin */
 public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
-  private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-  private static PhoneNumberToCarrierMapper phoneNumberToCarrierMapper = PhoneNumberToCarrierMapper.getInstance();
+  private MethodChannel channel;
+  private static final PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+  private static final PhoneNumberToCarrierMapper phoneNumberToCarrierMapper = PhoneNumberToCarrierMapper.getInstance();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-    final MethodChannel channel = new MethodChannel(binding.getBinaryMessenger(), "codeheadlabs.com/libphonenumber");
-    channel.setMethodCallHandler(new LibphonenumberPlugin());
+    channel = new MethodChannel(binding.getBinaryMessenger(), "codeheadlabs.com/libphonenumber");
+    channel.setMethodCallHandler(this);
   }
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-  }
-
-  /** Keeping around to support older apps that aren't using v2 Android embedding */
-  public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), "codeheadlabs.com/libphonenumber");
-    channel.setMethodCallHandler(new LibphonenumberPlugin());
+    if (channel != null) {
+      channel.setMethodCallHandler(null);
+    }
   }
 
   @Override
@@ -134,7 +131,7 @@ public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
       String countryCode = String.valueOf(p.getCountryCode());
       String formattedNumber = phoneUtil.format(p, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
 
-      Map<String, String> resultMap = new HashMap<String, String>();
+      Map<String, String> resultMap = new HashMap<>();
       resultMap.put("isoCode", regionCode);
       resultMap.put("regionCode", countryCode);
       resultMap.put("formattedPhoneNumber", formattedNumber);
@@ -150,11 +147,10 @@ public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
     String regionCode = phoneUtil.getRegionCodeForNumber(p);
     String formattedNumber = phoneUtil.format(p, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
 
-    Map<String, String> resultMap = new HashMap<String, String>();
+    Map<String, String> resultMap = new HashMap<>();
     resultMap.put("isoCode", regionCode);
     resultMap.put("formattedPhoneNumber", formattedNumber);
     result.success(resultMap);
-
   }
 
   private void handleGetNumberType(MethodCall call, Result result) {
@@ -207,7 +203,7 @@ public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
       result.error("NumberParseException", e.getMessage(), null);
     }
   }
-  
+
   private void formatAsYouType(MethodCall call, Result result) {
     final String phoneNumber = call.argument("phone_number");
     final String isoCode = call.argument("iso_code");
