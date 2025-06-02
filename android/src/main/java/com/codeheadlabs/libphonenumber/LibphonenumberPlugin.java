@@ -20,9 +20,9 @@ import java.util.Map;
 
 /** LibphonenumberPlugin */
 public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
+  private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+  private static PhoneNumberToCarrierMapper phoneNumberToCarrierMapper = PhoneNumberToCarrierMapper.getInstance();
   private MethodChannel channel;
-  private static final PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-  private static final PhoneNumberToCarrierMapper phoneNumberToCarrierMapper = PhoneNumberToCarrierMapper.getInstance();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
@@ -32,9 +32,7 @@ public class LibphonenumberPlugin implements MethodCallHandler, FlutterPlugin {
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    if (channel != null) {
-      channel.setMethodCallHandler(null);
-    }
+    channel.setMethodCallHandler(null);
   }
 
   @Override
